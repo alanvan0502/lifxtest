@@ -7,9 +7,9 @@ import retrofit2.http.GET
 interface EndPoint {
 
     companion object {
-        const val END_POINT = "https://cloud.lifx.com/themes/v1"
+        const val END_POINT = "https://cloud.lifx.com//"
     }
 
-    @GET("/curated")
+    @GET("/themes/v1/curated")
     fun loadData(): Observable<List<Data>>
 }
