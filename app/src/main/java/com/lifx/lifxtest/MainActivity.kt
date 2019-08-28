@@ -1,24 +1,28 @@
 package com.lifx.lifxtest
 
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.activity_main.*
+import android.content.Context
 import android.os.AsyncTask
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager.VERTICAL
+import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.lifx.lifxtest.model.Data
+import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONObject
 
 
 class MainActivity : AppCompatActivity() {
 
     lateinit var adapter: ListAdapter
-    val listData = mutableListOf<String>()
+    val listData = mutableListOf<Data>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,7 +31,7 @@ class MainActivity : AppCompatActivity() {
         val download = DownloadFileFromURL()
         download.execute("https://cloud.lifx.com/themes/v1/curated")
 
-        adapter = ListAdapter(listData)
+        adapter = ListAdapter(listData, this)
         list.adapter = adapter
         list.layoutManager = LinearLayoutManager(applicationContext)
 
@@ -35,7 +39,8 @@ class MainActivity : AppCompatActivity() {
         list.addItemDecoration(dividerItemDecoration)
     }
 
-    class ListAdapter(private val listData: List<String>): RecyclerView.Adapter<ListAdapter.ViewHolder>() {
+    class ListAdapter(private val listData: List<Data>, private val context: Context) :
+        RecyclerView.Adapter<ListAdapter.ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             return ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_row, parent, false))
@@ -44,13 +49,14 @@ class MainActivity : AppCompatActivity() {
         override fun getItemCount(): Int = listData.size
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.blah.text = listData[position]
+            holder.textView.text = listData[position].title
+            Glide.with(context).load(listData[position].imageUrl).into(holder.imageView)
         }
 
-        inner class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
-            val blah: TextView = itemView.findViewById(R.id.textView)
+        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val textView: TextView = itemView.findViewById(R.id.textView)
+            val imageView: ImageView = itemView.findViewById(R.id.image_view)
         }
-
     }
 
     inner class DownloadFileFromURL : AsyncTask<String, String, String>() {
@@ -63,7 +69,12 @@ class MainActivity : AppCompatActivity() {
 
                 for (i in 0 until (results?.length() ?: 0)) {
                     val result = results?.get(i) as JSONObject
-                    listData.add(result.getString("title"))
+                    val title = result.optString("title", "")
+                    val imageUrl = result.optString("image_url", "")
+                    listData.add(Data().apply {
+                        this.title = title
+                        this.imageUrl = imageUrl
+                    })
                 }
                 adapter.notifyDataSetChanged()
             }
