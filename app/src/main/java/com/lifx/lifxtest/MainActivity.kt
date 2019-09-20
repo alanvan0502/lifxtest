@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager.VERTICAL
@@ -27,8 +28,8 @@ import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var adapter: ListAdapter
-    val listData = mutableListOf<Data>()
+    private lateinit var adapter: ListAdapter
+    private val listData = mutableListOf<Data>()
     private lateinit var viewModel: AppViewModel
     private var bag: CompositeDisposable? = null
 
@@ -84,6 +85,11 @@ class MainActivity : AppCompatActivity() {
         inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val textView: TextView = itemView.findViewById(R.id.textView)
             val imageView: ImageView = itemView.findViewById(R.id.imageView)
+        }
+
+        fun updateList(newList: List<Data>) {
+            val diffResult = DiffUtil.calculateDiff(MyDiffCallback(this.listData, newList))
+            diffResult.dispatchUpdatesTo(this)
         }
     }
 }
